@@ -39,23 +39,27 @@ export default class GameGallery {
                 transform: {
                     app: { position: { x: 0, y: 0.5, z: 0 } }
                 },
-                text: {
-                    contents: "Game Gallery",
-                    anchor: TextAnchorLocation.MiddleCenter,
-                    color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
-                    height: 0.3
-                }
+                // text: {
+                //     contents: "Game Gallery",
+                //     anchor: TextAnchorLocation.MiddleCenter,
+                //     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
+                //     height: 0.3
+                // }
             }
         });
-
-        // Even though the actor is not yet created in Altspace (because we didn't wait for the promise),
-        // we can still get a reference to it by grabbing the `value` field from the forward promise.
         this.text = textPromise.value;
 
-        for (let tileIndexX = 0; tileIndexX < 3; tileIndexX++) {
-            for (let tileIndexZ = 0; tileIndexZ < 3; tileIndexZ++) {
+        // this.text.createAnimation(
+        //     "Spin", {
+        //         keyframes: this.generateSpinKeyframes(20, Vector3.Down()),
+        //         events: [],
+        //         wrapMode: AnimationWrapMode.PingPong
+        //     });
 
-                const spherePromise = Actor.CreatePrimitive(this.context, {
+        // for (let tileIndexX = 0; tileIndexX < 3; tileIndexX++) {
+        //     for (let tileIndexZ = 0; tileIndexZ < 3; tileIndexZ++) {
+
+        const spherePromise = Actor.CreatePrimitive(this.context, {
                     definition: {
                         shape: PrimitiveShape.Sphere,
                         radius: 0.9,
@@ -69,27 +73,22 @@ export default class GameGallery {
                         parentId: this.text.id,
                         transform: {
                             local: {
-                            position: { x: (tileIndexX) - 1.0, y: 0.5, z: (tileIndexZ) - 1.0 },
+                                position: { x: 1.0, y: 0.5, z: 1.0 },
+                            // position: { x: (tileIndexX) - 1.0, y: 0.5, z: (tileIndexZ) - 1.0 },
                             scale: { x: 0.4, y: 0.4, z: 0.4 }
                             }
                         }
                     }
                 });
-                this.sphere = spherePromise.value;
-                const buttonBehavior = this.sphere.setBehavior(ButtonBehavior);
-                // Trigger the grow/shrink animations on hover.
-                buttonBehavior.onHover('enter', () => {
-                this.sphere.animateTo(
-                { transform: { local: { scale: { x: 4, y: 4, z: 4 } } } }, 0.3, AnimationEaseCurves.EaseOutSine);
-                });
-                buttonBehavior.onHover('exit', () => {
-                this.sphere.animateTo(
-                { transform: { local: { scale: { x: 0.4, y: 0.4, z: 0.4 } } } }, 0.3, AnimationEaseCurves.EaseOutSine);
-                });
-            }
-        }
+        this.sphere = spherePromise.value;
+        const buttonBehavior = this.sphere.setBehavior(ButtonBehavior);
+        buttonBehavior.onClick('pressed', () => {
+            this.sphere.animateTo(
+            { transform: { local: { scale: { x: 0, y: 0, z: 0 } } } }, 0.0, AnimationEaseCurves.EaseOutSine);
+        });
     }
 }
+
 //         // Here we create an animation on our text actor. Animations have three mandatory arguments:
 //         // a name, an array of keyframes, and an array of events.
 //         this.text.createAnimation(
@@ -176,6 +175,7 @@ export default class GameGallery {
 //         });
 //             buttonBehavior.onHover('exit', () => {
 //             this.cube.animateTo(
+// tslint:disable-next-line: max-line-length
 //                 { transform: { local: { scale: { x: 0.4, y: 0.4, z: 0.4 } } } }, 0.3, AnimationEaseCurves.EaseOutSine);
 //         });
 
