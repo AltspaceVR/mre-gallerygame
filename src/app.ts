@@ -122,6 +122,7 @@ export default class GameGallery {
                         scale: { x: 0.4, y: 0.4, z: 0.4 }
                     }
                 },
+
                 // collider: {enabled: false,
                 //     isTrigger: false,
                 //     colliderGeometry: sphereCollider.
