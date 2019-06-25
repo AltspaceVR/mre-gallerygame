@@ -540,12 +540,19 @@ export default class GameGallery {
         this.dart = dartPromise.value;
         this.dart.onGrab("end", () => {
 // tslint:disable-next-line: max-line-length
+            //Will we need this rotation? Do we want the darts to lock onto the baloons, or do we want the player to aim the dart and then throw.
             this.dart.transform.local.rotation = Quaternion.LookAt(this.dart.transform.local.position, this.sphere.transform.local.position);
 // tslint:disable-next-line: max-line-length
+            //Animimate to should work, however is this the behavior we want? If we want the darts to track and target the spheres yes, if not we should try and figure out how to animate the darts
+            //as an "arc"
             this.dart.animateTo({ transform: { local: { position: this.sphere.transform.local.position } } }, 3, AnimationEaseCurves.Linear);
             this.dart.collider.isTrigger = true;
+            // We'll need to put some conditional logic somewhere in here. For example "if dart position == sphere position sphere.destroy()" or something along those lines. 
+
         });
     }
+
+    //instead of hard coding every dart, we can probably put this into a for loop
     private createDart1() {
 
         const dartPromise1 = Actor.CreateFromGLTF(this.context, {
