@@ -60,8 +60,8 @@ export default class GameGallery {
         setTimeout(() => this.launchSphere(), 100);
     }
     private launchSphere() {
-        for (let tileIndexX = 0; tileIndexX < 3; tileIndexX++) {
-            for (let tileIndexZ = 0; tileIndexZ < 3; tileIndexZ++) {
+        for (let tileIndexY = 0; tileIndexY < 4; tileIndexY++) {
+            for (let tileIndexZ = 0; tileIndexZ < 4; tileIndexZ++) {
                 const rootPromise = Actor.CreateEmpty(this.context);
                 this.root = rootPromise.value;
                 const spherePromise = Actor.CreatePrimitive(this.context, {
@@ -77,18 +77,17 @@ export default class GameGallery {
                         parentId: this.root.id,
                         transform: {
                             local: {
-                                position: { x: (tileIndexX) - 1.0, y: 0.5, z: (tileIndexZ) - 1.0 },
+                                position: { x: - 5.0, y: (tileIndexY) - 1.0, z: (tileIndexZ) - 1.0 },
                                 scale: { x: 0.4, y: 0.4, z: 0.4 }
                             }
                         },
                     }
                 });
                 this.sphere = spherePromise.value;
-                const buttonBehavior = this.sphere.setBehavior(ButtonBehavior);
-                this.sphere.subscribe("transform");
-                const timer = setTimeout(() => this.cancelSphere(), 3000);
+                const buttonBehavior = this.root.setBehavior(ButtonBehavior);
+                // const timer = setTimeout(() => this.cancelSphere(), 3000);
                 buttonBehavior.onClick(() => {
-                    clearTimeout(timer);
+                    // clearTimeout(timer);
                     this.cancelSphere();
                 });
             }
