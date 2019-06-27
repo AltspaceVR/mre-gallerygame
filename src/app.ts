@@ -10,9 +10,11 @@ import {
     CollisionDetectionMode,
     Color3,
     Context,
+    ForwardPromise,
     PrimitiveShape,
     Quaternion,
     RigidBody,
+    TargetBehavior,
     TextAnchorLocation,
     Vector2,
     Vector3,
@@ -29,6 +31,8 @@ export default class GameGallery {
     private dartPromise: Actor;
     private spherePromise: Actor;
     private textPromise: Actor;
+
+    private sphereArray: Array<Actor> = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(() => this.started());
@@ -51,19 +55,33 @@ export default class GameGallery {
                 }
             }
         });
+        this.createRootActor();
         this.launchSphere();
         this.createDart();
         this.createDart();
+        this.sphereBehavior();
     }
     private cancelSphere() {
         this.sphere.destroy();
-        setTimeout(() => this.launchSphere(), 100);
+    }
+    private createRootActor(){
+        const rootPromise = Actor.CreateEmpty(this.context);
+        this.root = rootPromise.value;
+    }
+    private sphereBehavior(){
+// tslint:disable-next-line: prefer-for-of
+        for(let sphere = 0; sphere < this.sphereArray.length; sphere++) {
+             this.sphereArray[sphere].setBehavior(ButtonBehavior).onClick(() => {
+                this.sphereArray[sphere].destroy();
+            });
+        //     this.sphereArray[sphere].setBehavior(ButtonBehavior).onHover('enter', ()=>{
+        //         this.sphereArray[sphere].light.color.r = 140;
+        // });
+        }
     }
     private launchSphere() {
         for (let tileIndexY = 0; tileIndexY < 4; tileIndexY++) {
             for (let tileIndexZ = 0; tileIndexZ < 4; tileIndexZ++) {
-                const rootPromise = Actor.CreateEmpty(this.context);
-                this.root = rootPromise.value;
                 const spherePromise = Actor.CreatePrimitive(this.context, {
                     definition: {
                         shape: PrimitiveShape.Sphere,
@@ -78,18 +96,13 @@ export default class GameGallery {
                         transform: {
                             local: {
                                 position: { x: - 5.0, y: (tileIndexY) - 1.0, z: (tileIndexZ) - 1.0 },
-                                scale: { x: 0.4, y: 0.4, z: 0.4 }
+                                scale: { x: 0.3, y: 0.4, z: 0.3 },
                             }
                         },
                     }
                 });
-                this.sphere = spherePromise.value;
-                const buttonBehavior = this.root.setBehavior(ButtonBehavior);
-                // const timer = setTimeout(() => this.cancelSphere(), 3000);
-                buttonBehavior.onClick(() => {
-                    // clearTimeout(timer);
-                    this.cancelSphere();
-                });
+
+                this.sphereArray.push(spherePromise.value);
             }
         }
     }
