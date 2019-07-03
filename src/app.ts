@@ -16,11 +16,13 @@ import {
     RigidBody,
     TargetBehavior,
     TextAnchorLocation,
+    User,
     Vector2,
     Vector3,
     Vector4,
 } from '@microsoft/mixed-reality-extension-sdk';
 import { isPrimitive } from 'util';
+import { DESTRUCTION } from 'dns';
 /**
  * The main class of this app. All the logic goes here.
  */
@@ -31,11 +33,27 @@ export default class GameGallery {
     private dartPromise: Actor;
     private spherePromise: Actor;
     private textPromise: Actor;
+    private playerOne: Actor;
 
-    private sphereArray: Array<Actor> = [];
+    private sphereArray: Actor[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(() => this.started());
+        this.context.onUserJoined((user) => this.userJoined(user));
+    }
+
+    private userJoined(user: User) {
+     const playerOnePromise = Actor.CreateEmpty(this.context, {
+            actor: {
+                attachment: {
+                    userId: user.id,
+                    attachPoint: 'hips',
+                },
+                name: "this is the hip",
+                subscriptions: ['transform']
+            },
+        });
+     this.playerOne = playerOnePromise.value;
     }
     /**
      * Once the context is "started", initialize the app.
@@ -48,7 +66,7 @@ export default class GameGallery {
                     app: { position: { x: 0, y: 0.5, z: 0 } }
                 },
                 text: {
-                    contents: "Game Gallery",
+                    contents: "Gallery Game",
                     anchor: TextAnchorLocation.TopLeft,
                     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
                     height: 0.3
@@ -58,25 +76,21 @@ export default class GameGallery {
         this.createRootActor();
         this.launchSphere();
         this.createDart();
-        this.createDart();
         this.sphereBehavior();
     }
     private cancelSphere() {
         this.sphere.destroy();
     }
-    private createRootActor(){
+    private createRootActor() {
         const rootPromise = Actor.CreateEmpty(this.context);
         this.root = rootPromise.value;
     }
-    private sphereBehavior(){
-// tslint:disable-next-line: prefer-for-of
-        for(let sphere = 0; sphere < this.sphereArray.length; sphere++) {
-             this.sphereArray[sphere].setBehavior(ButtonBehavior).onClick(() => {
+    private sphereBehavior() {
+        // tslint:disable-next-line: prefer-for-of
+        for (let sphere = 0; sphere < this.sphereArray.length; sphere++) {
+            this.sphereArray[sphere].setBehavior(ButtonBehavior).onClick(() => {
                 this.sphereArray[sphere].destroy();
             });
-        //     this.sphereArray[sphere].setBehavior(ButtonBehavior).onHover('enter', ()=>{
-        //         this.sphereArray[sphere].light.color.r = 140;
-        // });
         }
     }
     private launchSphere() {
@@ -99,9 +113,11 @@ export default class GameGallery {
                                 scale: { x: 0.3, y: 0.4, z: 0.3 },
                             }
                         },
+                        // collider: {
+                        //     isTrigger: true
+                        // }
                     }
                 });
-
                 this.sphereArray.push(spherePromise.value);
             }
         }
@@ -111,11 +127,11 @@ export default class GameGallery {
             // at the given URL
             resourceUrl: `${this.baseUrl}/11750_throwing_dart_v1_L3.glb`,
             // and spawn box colliders around the meshes.
-            colliderType: 'sphere',
+            colliderType: 'mesh',
             // Also apply the following generic actor properties.
             actor: {
+                parentId: this.root.id,
                 name: 'Dart',
-                // Parent the glTF model to the text actor.
                 transform: {
                     local: {
                         position: { x: -1, y: -.5, z: 0 },
@@ -123,17 +139,23 @@ export default class GameGallery {
                         rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
                     }
                 },
-                grabbable: true
+                grabbable: true,
             }
         });
         this.dart = dartPromise.value;
-        this.dart.onGrab("end", () => {
-            // tslint:disable-next-line: max-line-length
-            this.dart.transform.local.rotation = Quaternion.LookAt(this.dart.transform.local.position, this.sphere.transform.local.position);
-            // tslint:disable-next-line: max-line-length
-            this.dart.animateTo({ transform: { local: { position: this.sphere.transform.local.position } } }, 4, AnimationEaseCurves.Linear);
-            // tslint:disable-next-line: max-line-length
-            console.log("same position", this.dart.transform.local.position === this.sphere.transform.local.position);
+        this.dart.enableRigidBody({ detectCollisions: true, useGravity: false });
+        // this.dart.collider.isTrigger = true;
+        this.dart.collider.onCollision('collision-enter', ()=>{
+            console.log("heeey boo")
+            this.cancelSphere();
+        })
+
+
+        this.dart.onGrab("end", (user) => {
+// tslint:disable-next-line: max-line-length
+
+            this.dart.animateTo({ transform: { app: { position: { z: this.sphere.transform.app.position.z + 100 } } } }, 5, AnimationEaseCurves.EaseOutSine);
+            this.dart.rigidBody.velocity = 0;
         });
     }
 }
