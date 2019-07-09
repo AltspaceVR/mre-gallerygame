@@ -6,12 +6,23 @@ import {
     Actor,
     AnimationEaseCurves,
     ButtonBehavior,
+    Collider,
+    CollisionDetectionMode,
+    Color3,
     Context,
+    ForwardPromise,
     PrimitiveShape,
     Quaternion,
+    RigidBody,
+    TargetBehavior,
     TextAnchorLocation,
     User,
+    Vector2,
+    Vector3,
+    Vector4,
 } from '@microsoft/mixed-reality-extension-sdk';
+import { DESTRUCTION } from 'dns';
+import { isPrimitive } from 'util';
 /**
  * The main class of this app. All the logic goes here.
  */
@@ -19,39 +30,81 @@ export default class GameGallery {
     private root: Actor;
     private sphere: Actor;
     private dart: Actor;
+    private dartPromise: Actor;
+    private spherePromise: Actor;
+    private textPromise: Actor;
+    private playerOne: Actor;
+    public score: number;
+
     private sphereArray: Actor[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(() => this.started());
         this.context.onUserJoined((user) => this.userJoined(user));
     }
+
     private userJoined(user: User) {
         const playerOnePromise = Actor.CreateEmpty(this.context, {
             actor: {
                 attachment: {
                     userId: user.id,
-                    attachPoint: 'hips',
+                    attachPoint: 'head',
                 },
-                name: "this is the hip",
+                name: "this is the head",
                 subscriptions: ['transform']
             },
         });
+        this.playerOne = playerOnePromise.value;
     }
-    /**
-     * Once the context is "started", initialize the app.
-     */
+
     private started() {
+        this.score = 0;
+        this.textPromise = Actor.CreateEmpty(this.context, {
+            actor: {
+                name: 'Text',
+                transform: {
+                    app: { position: { x: 0, y: 0.5, z: 0 } }
+                },
+                text: {
+                    contents: "Gallery Game, score: " + JSON.stringify(this.score),
+                    anchor: TextAnchorLocation.TopLeft,
+                    color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
+                    height: 0.3
+                }
+            }
+        }).value;
+        const testPromise = Actor.CreatePrimitive(this.context, {
+            definition: {
+                shape: PrimitiveShape.Box,
+                dimensions: { x: 1, y: 1, z: 1 }
+            },
+            addCollider: true,
+            actor: {
+                name: 'Test',
+                transform: {
+                    local: {
+                        position: { x: 2, y: 2, z: 2 },
+                        scale: { x: 0.3, y: 0.4, z: 0.3 },
+                    }
+                },
+                grabbable: true,
+            }
+        }).then((actor) => {
+            actor.enableRigidBody({ detectCollisions: true, useGravity: false });
+        });
         this.createRootActor();
         this.launchSphere();
         this.createDart();
         this.sphereBehavior();
-        this.dart.collider.onTrigger('trigger-exit', () => {
-            console.log("do something");
-            this.cancelSphere();
-        });
+        this.playerOne.subscribe('transform');
+        this.dart.subscribe('transform');
     }
     private cancelSphere() {
         this.sphere.destroy();
+    }
+    private cancelDart() {
+        this.dart.destroy();
+        this.createDart();
     }
     private createRootActor() {
         const rootPromise = Actor.CreateEmpty(this.context);
@@ -92,7 +145,11 @@ export default class GameGallery {
                     actor.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                         console.log("other actor name: " + otherActor.name);
                         if (otherActor.parent.name === "throwing_dart") {
+                            this.score += 10;
+                            this.textPromise.text.contents = "Gallery Game, score: " + JSON.stringify(this.score);
                             actor.destroy();
+                            // this.cancelSphere();
+                            this.cancelDart();
                         }
                     });
                 }).catch();
@@ -105,7 +162,7 @@ export default class GameGallery {
             // at the given URL
             resourceUrl: `${this.baseUrl}/11750_throwing_dart_v1_L3.glb`,
             // and spawn box colliders around the meshes.
-            colliderType: 'sphere',
+            colliderType: 'box',
             // Also apply the following generic actor properties.
             actor: {
                 parentId: this.root.id,
@@ -117,22 +174,51 @@ export default class GameGallery {
                         rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
                     }
                 },
-                rigidBody: {
-                    isKinematic: true,
-                },
-                grabbable: true
+                grabbable: true,
             }
         });
         this.dart = dartPromise.value;
-        this.dart.enableRigidBody({ detectCollisions: true, useGravity: false });
-        this.dart.collider.onCollision('collision-enter', () => {
-            console.log('heeeyyyyy')
-        })
-        // this.dart.collider.isTrigger = true;
-        this.dart.onGrab("end", () => {
-            // tslint:disable-next-line: max-line-length
-            this.dart.animateTo({ transform: { app: { position: { z: this.sphere.transform.app.position.z + 100 } } } }, 5, AnimationEaseCurves.EaseOutSine);
-            this.dart.rigidBody.velocity = 0;
+
+        this.dart.enableRigidBody({ detectCollisions: true, useGravity: false, isKinematic: true });
+
+        this.dart.onGrab('begin', () => {
+            this.initGrabbedDart();
         });
+
+        this.dart.onGrab("end", () => {
+            this.throwDart();
+
+        });
+
+        /*
+        this.dart.collider.isTrigger = true;
+        this.dart.collider.onCollision('collision-enter', () => {
+            this.score += 10;
+            this.textPromise.text.contents = "Gallery Game, score: " + JSON.stringify(this.score);
+            this.cancelDart();
+            console.log("--------score", this.score);
+        });
+        */
+
+    }
+
+    private initGrabbedDart() {
+        // Align dart with user's forward direction.
+        this.dart.transform.app.rotation = this.playerOne.transform.app.rotation;
+    }
+
+    private throwDart() {
+        let targetPoint = new Vector3(0, 0, 10);
+        const angles = this.playerOne.transform.app.rotation.toEulerAngles();
+        targetPoint = targetPoint.rotateByQuaternionToRef(this.playerOne.transform.app.rotation, targetPoint);
+        targetPoint.add(this.playerOne.transform.app.position);
+        // tslint:disable-next-line: max-line-length
+        this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
+        setTimeout(() => this.cancelDart(), 9000);
+
+        // this.dart.transform.local.position.z += this.playerOne.transform.local.position.z + -6;
+        // tslint:disable-next-line: max-line-length
+        // setTimeout(() => { this.dart.transform.local.position.z += this.playerOne.transform.local.position.z - 1; }, 600);
+        // this.dart.collider.isTrigger = true;
     }
 }
