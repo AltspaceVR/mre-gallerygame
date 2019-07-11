@@ -5,7 +5,6 @@
 import {
     Actor,
     AnimationEaseCurves,
-    ButtonBehavior,
     Context,
     PrimitiveShape,
     Quaternion,
@@ -44,12 +43,20 @@ export default class GalleryGame {
         this.createRootActor();
         this.galleryGameScore();
         this.launchSphere();
-        this.pushSpherePromiseToArray();
+        // setInterval(() => {
+        //     this.cancelSphere();
+        //     console.log("timer working.........");
+        // }, 9000);
+
+        // setInterval(() => {
+        //     console.log("heeeyy");
+        //     if (this.root.children.length === 0) {
+        //         this.restartGame();
+        //     }
+        // }, 5000 );
         this.launchDart();
         this.playerOne.subscribe('transform');
         this.dart.subscribe('transform');
-        this.restartGame();
-
     }
     private createRootActor() {
         const rootPromise = Actor.CreateEmpty(this.context);
@@ -60,6 +67,7 @@ export default class GalleryGame {
         const textPromise = Actor.CreateEmpty(this.context, {
             actor: {
                 name: 'Text',
+                parentId: this.root.id,
                 transform: {
                     local: { position: { x: 0, y: 4, z: 0 } }
                 },
@@ -98,6 +106,7 @@ export default class GalleryGame {
                     actor.collider.isTrigger = true;
                     actor.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                         if (otherActor.parent.name === "throwing_dart") {
+                            setTimeout(() => this.endGame(), 15000);
                             this.score += 10;
                             this.text.text.contents = "Gallery Game Score: " + JSON.stringify(this.score);
                             actor.destroy();
@@ -107,14 +116,6 @@ export default class GalleryGame {
                 }).catch();
                 this.sphereArray.push(spherePromise.value);
             }
-        }
-    }
-    private pushSpherePromiseToArray() {
-        // tslint:disable-next-line: prefer-for-of
-        for (let sphere = 0; sphere < this.sphereArray.length; sphere++) {
-            // this.sphereArray[sphere].setBehavior(ButtonBehavior).onClick(() => {
-            //     this.sphereArray[sphere].destroy();
-            // });
         }
     }
     private launchDart() {
@@ -156,14 +157,17 @@ export default class GalleryGame {
         targetPoint = targetPoint.add(this.playerOne.transform.app.position);
         // tslint:disable-next-line: max-line-length
         this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
-        setTimeout(() => this.cancelDart(), 9000);
+        setTimeout(() => this.cancelDart(), 5000);
     }
     private cancelDart() {
         this.dart.destroy();
         this.launchDart();
     }
-    private restartGame() {
-        setTimeout(() => this.context.quit(), 10000);
+    private endGame() {
+        this.root.destroy();
+        this.startGame();
+    }
+    private startGame() {
         this.started();
     }
 }
