@@ -15,6 +15,8 @@ process.on('uncaughtException', err => console.log('uncaughtException', err));
 process.on('unhandledRejection', reason => console.log('unhandledRejection', reason));
 
 log.enable('app');
+// log.enable('network');
+// log.enable('network-content');
 
 // Start listening for connections, and serve static files
 const server = new WebHost({
