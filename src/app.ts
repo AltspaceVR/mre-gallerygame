@@ -23,7 +23,18 @@ export default class GalleryGame {
     public score: number;
 
     constructor(private context: Context, private baseUrl: string) {
-        this.context.onStarted(() => this.started());
+        this.context.onStarted(() => {
+            this.started();
+            setInterval(() => {
+                console.log("interval called.");
+                if (this.root != null) {
+                    this.root.destroy();
+                } else {
+                    console.log("no destroy");
+                }
+                this.started();
+            }, 9000);
+        });
         this.context.onUserJoined((user) => this.userJoined(user));
     }
     private userJoined(user: User) {
@@ -38,25 +49,13 @@ export default class GalleryGame {
             },
         });
         this.playerOne = playerOnePromise.value;
+        this.playerOne.subscribe('transform');
     }
     private started() {
         this.createRootActor();
         this.galleryGameScore();
         this.launchSphere();
-        // setInterval(() => {
-        //     this.cancelSphere();
-        //     console.log("timer working.........");
-        // }, 9000);
-
-        // setInterval(() => {
-        //     console.log("heeeyy");
-        //     if (this.root.children.length === 0) {
-        //         this.restartGame();
-        //     }
-        // }, 5000 );
         this.launchDart();
-        this.playerOne.subscribe('transform');
-        this.dart.subscribe('transform');
     }
     private createRootActor() {
         const rootPromise = Actor.CreateEmpty(this.context);
@@ -106,7 +105,6 @@ export default class GalleryGame {
                     actor.collider.isTrigger = true;
                     actor.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                         if (otherActor.parent.name === "throwing_dart") {
-                            setTimeout(() => this.endGame(), 15000);
                             this.score += 10;
                             this.text.text.contents = "Gallery Game Score: " + JSON.stringify(this.score);
                             actor.destroy();
@@ -146,6 +144,7 @@ export default class GalleryGame {
         this.dart.onGrab("end", () => {
             this.throwDart();
         });
+        this.dart.subscribe('transform');
     }
     private initGrabbedDart() {
         // Align dart with user's forward direction.
