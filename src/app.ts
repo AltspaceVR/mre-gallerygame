@@ -23,17 +23,19 @@ export default class GalleryGame {
     public score: number;
 
     constructor(private context: Context, private baseUrl: string) {
+        // this.context.onStarted(() => this.started());
         this.context.onStarted(() => {
             this.started();
             setInterval(() => {
                 console.log("interval called.");
                 if (this.root != null) {
+                    if (this.dart != null) {
+                        this.dart.destroy();
+                    }
                     this.root.destroy();
-                } else {
-                    console.log("no destroy");
                 }
-                this.started();
-            }, 9000);
+                this.startGame();
+            }, 20000);
         });
         this.context.onUserJoined((user) => this.userJoined(user));
     }
@@ -45,7 +47,7 @@ export default class GalleryGame {
                     attachPoint: 'right-hand',
                 },
                 name: "PlayerOne Right Hand",
-                subscriptions: ['transform']
+                // subscriptions: ['transform']
             },
         });
         this.playerOne = playerOnePromise.value;
@@ -137,7 +139,10 @@ export default class GalleryGame {
             }
         });
         this.dart = dartPromise.value;
-        this.dart.enableRigidBody({ useGravity: false, isKinematic: true });
+        // this.dart.subscribe('transform'); ------------------------------------Did not work here
+        // tslint:disable-next-line: max-line-length
+        this.dart.enableRigidBody({ enabled: true, detectCollisions: true, isKinematic: true });
+        // this.dart.subscribe('transform'); ------------------------------------Did not work here
         this.dart.onGrab('begin', () => {
             this.initGrabbedDart();
         });
@@ -148,23 +153,19 @@ export default class GalleryGame {
     }
     private initGrabbedDart() {
         // Align dart with user's forward direction.
-        this.dart.transform.app.rotation = this.playerOne.transform.app.rotation;
+        this.dart.transform.local.rotation = this.playerOne.transform.app.rotation;
     }
     private throwDart() {
         let targetPoint = new Vector3(0, 0, 10);
         targetPoint = targetPoint.rotateByQuaternionToRef(this.playerOne.transform.app.rotation, targetPoint);
-        targetPoint = targetPoint.add(this.playerOne.transform.app.position);
+        targetPoint.add(this.playerOne.transform.app.position);
         // tslint:disable-next-line: max-line-length
         this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
-        setTimeout(() => this.cancelDart(), 5000);
+        setTimeout(() => this.cancelDart(), 6000);
     }
     private cancelDart() {
         this.dart.destroy();
         this.launchDart();
-    }
-    private endGame() {
-        this.root.destroy();
-        this.startGame();
     }
     private startGame() {
         this.started();
