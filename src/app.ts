@@ -5,6 +5,8 @@
 import {
     Actor,
     AnimationEaseCurves,
+    Asset,
+    AssetContainer,
     ButtonBehavior,
     Collider,
     Context,
@@ -20,30 +22,25 @@ import { ok } from 'assert';
 export default class GalleryGame {
     private root: Actor;
     private playerOne: Actor;
-    private text: Actor;
+    private gameScore: Actor;
+    private gameTimer: Actor;
     private sphereArray: Actor[] = [];
     private spheres: Actor;
     private desk: Actor;
     private dart: Actor;
     private gamePlayButton: Actor;
     public score: number;
+    public timer: number;
+    public assets: AssetContainer;
+    public dartAssets: Asset[];
 
     constructor(private context: Context, private baseUrl: string) {
-        this.context.onStarted(() => {
-            this.started();
-            setInterval(() => {
-                console.log("interval called.");
-                if (this.root != null) {
-                    if (this.dart != null) {
-                        this.dart.destroy();
-                    }
-                    this.root.destroy();
-                }
-                this.started();
-            }, 45000);
-        });
-        this.context.onUserJoined((user) => this.userJoined(user));
+        this.context.onStarted(async () => await this.started());
+        this.context.onUserJoined(user => this.userJoined(user));
+        this.assets = new AssetContainer(context);
     }
+
+    // ----------------------------------------------------------------------
     private userJoined(user: User) {
         const playerOne = Actor.CreateEmpty(this.context, {
             actor: {
@@ -57,24 +54,37 @@ export default class GalleryGame {
         this.playerOne = playerOne;
         this.playerOne.subscribe('transform');
     }
-    private started() {
+
+    private async started() {
+        await this.preloadAssets();
         this.createRootActor();
         this.createGalleryGameScore();
-        // this.createSpheres();
+        this.createGalleryGameTimer();
+        this.createSpheres();
         this.createDesk();
-        // this.createDart();
+        this.createDart();
         this.createPlayButton();
         this.startGame();
     }
+
+    private async preloadAssets() {
+        // tslint:disable: max-line-length
+        return Promise.all([
+            this.assets.loadGltf(`${this.baseUrl}/11750_throwing_dart_v1_L3.glb`, 'mesh').then(assets => this.dartAssets = assets),
+        ]);
+        // tslint:disable: max-line-length
+    }
+
     private createRootActor() {
         const root = Actor.CreateEmpty(this.context);
         this.root = root;
     }
+
     private createGalleryGameScore() {
         this.score = 0;
-        const gameScore = Actor.CreateEmpty(this.context, {
+        const galleryGameScore = Actor.CreateEmpty(this.context, {
             actor: {
-                name: 'Text',
+                name: 'Score',
                 parentId: this.root.id,
                 transform: {
                     local: { position: { x: 0, y: 4, z: 0 } }
@@ -86,8 +96,28 @@ export default class GalleryGame {
                 },
             }
         });
-        this.text = gameScore;
+        this.gameScore = galleryGameScore;
     }
+
+    private createGalleryGameTimer() {
+        this.timer = 45;
+        const galleryGameTimer = Actor.CreateEmpty(this.context, {
+            actor: {
+                name: 'Timer',
+                parentId: this.root.id,
+                transform: {
+                    local: { position: { x: 4, y: 4, z: 0 } }
+                },
+                text: {
+                    contents: "Gallery Game Timer: " + JSON.stringify(this.timer),
+                    color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
+                    height: 0.29,
+                },
+            }
+        });
+        this.gameTimer = galleryGameTimer;
+    }
+
     private createSpheres() {
         for (let tileIndexY = 0; tileIndexY < 4; tileIndexY++) {
             for (let tileIndexX = 0; tileIndexX < 4; tileIndexX++) {
@@ -113,9 +143,10 @@ export default class GalleryGame {
                 spheres.created().then(() => {
                     spheres.collider.isTrigger = true;
                     spheres.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+
                         if (otherActor.parent.name === "throwing_dart") {
                             this.score += 10;
-                            this.text.text.contents = "Gallery Game Score: " + JSON.stringify(this.score);
+                            this.gameScore.text.contents = "Gallery Game Score: " + JSON.stringify(this.score);
                             spheres.destroy();
                             this.cancelDart();
                         }
@@ -125,6 +156,7 @@ export default class GalleryGame {
             }
         }
     }
+
     private createDesk() {
         this.desk = Actor.CreateFromGLTF(this.context, {
             // at the given URL
@@ -145,12 +177,10 @@ export default class GalleryGame {
             }
         });
     }
+
     private createDart() {
-        this.dart = Actor.CreateFromGLTF(this.context, {
-            // at the given URL
-            resourceUrl: `${this.baseUrl}/11750_throwing_dart_v1_L3.glb`,
-            // and spawn box colliders around the meshes.
-            colliderType: 'mesh',
+        this.dart = Actor.CreateFromPrefab(this.context, {
+            prefabId: this.dartAssets[0].id,
             // Also apply the following generic actor properties.
             actor: {
                 parentId: this.root.id,
@@ -175,10 +205,12 @@ export default class GalleryGame {
         });
         this.dart.subscribe('transform');
     }
+
     private initGrabbedDart() {
         // Align dart with user's forward direction.
         this.dart.transform.local.rotation = this.playerOne.transform.app.rotation;
     }
+
     private throwDart() {
         let targetPoint = new Vector3(0, 0, 10);
         targetPoint = targetPoint.rotateByQuaternionToRef(this.playerOne.transform.app.rotation, targetPoint);
@@ -187,10 +219,12 @@ export default class GalleryGame {
         this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
         setTimeout(() => this.cancelDart(), 6000);
     }
+
     private cancelDart() {
         this.dart.destroy();
         this.createDart();
     }
+
     private createPlayButton() {
         // Load a glTF model
         this.gamePlayButton = Actor.CreateFromGltf(this.context, {
@@ -211,12 +245,21 @@ export default class GalleryGame {
             }
         });
     }
+
     private startGame() {
         const gamePlayButtonBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
         // When Game Play Button is clicked trigger the game play action.
         gamePlayButtonBehavior.onClick(() => {
-            this.createSpheres();
-            this.createDart();
+            const timer = setInterval(async () => {
+                console.log("interval called.");
+                if (this.root != null) {
+                    if (this.dart != null) {
+                        this.dart.destroy();
+                    }
+                    this.root.destroy();
+                }
+                await this.started();
+            }, 45000);
         });
     }
 }
