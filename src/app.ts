@@ -123,8 +123,8 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createSpheres() {
-        for (let tileIndexY = 0; tileIndexY < 4; tileIndexY++) {
-            for (let tileIndexX = 0; tileIndexX < 4; tileIndexX++) {
+        for (let tileIndexX = 0; tileIndexX < 12; tileIndexX++) {
+            for (let tileIndexY = 0; tileIndexY < 3; tileIndexY++) {
                 const spheres = Actor.CreatePrimitive(this.context, {
                     definition: {
                         shape: PrimitiveShape.Sphere,
@@ -138,7 +138,7 @@ export default class GalleryGame {
                         parentId: this.root.id,
                         transform: {
                             local: {
-                                position: { x: (tileIndexX), y: (tileIndexY), z: 0 },
+                                position: { x: 7 - (tileIndexX), y: (tileIndexY), z: 0 },
                                 scale: { x: 0.3, y: 0.4, z: 0.3 },
                             }
                         },
