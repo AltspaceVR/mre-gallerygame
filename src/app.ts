@@ -37,9 +37,12 @@ export default class GalleryGame {
     private assets: AssetContainer;
     public desk: Actor;
     private deskAsset: Asset[] = [];
-    private dart: Actor;
+    public dart: Actor;
+    public grabbedDart: Actor;
+    public throwDart: Actor;
+    public dartsArray: Actor[] = [];
     private dartAssets: Asset[] = [];
-    private gamePlayButton: Actor;
+    public gamePlayButton: Actor;
     private gamePlayButtonAsset: Asset[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
@@ -52,14 +55,14 @@ export default class GalleryGame {
     private userJoined(user: User) {
         this.playerOne = Actor.CreateEmpty(this.context, {
             actor: {
+                subscriptions: ['transform'],
                 attachment: {
                     userId: user.id,
                     attachPoint: 'center-eye',
                 },
-                name: "Player Center Eye",
+                name: 'Player Center Eye',
             },
         });
-        this.playerOne.subscribe('transform');
     }
 
     // --------------------------------------------------------------------------------------------
@@ -84,11 +87,10 @@ export default class GalleryGame {
     private async preloadAssets() {
         // tslint:disable: max-line-length
         return Promise.all([
-            this.assets.loadGltf(`${this.baseUrl}/Table.glb`, 'box').then(assets => this.deskAsset = assets),
+            this.assets.loadGltf(`${this.baseUrl}/Table.glb`, 'mesh').then(assets => this.deskAsset = assets),
             this.assets.loadGltf(`${this.baseUrl}/11750_throwing_dart_v1_L3.glb`, 'mesh').then(assets => this.dartAssets = assets),
-            this.assets.loadGltf(`${this.baseUrl}/Play Button.glb`, 'box').then(assets => this.gamePlayButtonAsset = assets),
+            this.assets.loadGltf(`${this.baseUrl}/Play Button.glb`, 'mesh').then(assets => this.gamePlayButtonAsset = assets),
         ]);
-        // tslint:disable: max-line-length
     }
 
     // --------------------------------------------------------------------------------------------
@@ -146,7 +148,8 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createBlue100sphere() {
-        for (let blue100SphereIndexX = 0; blue100SphereIndexX < 12; blue100SphereIndexX++) {
+        const blue100SphereCount = 12;
+        for (let blue100SphereIndexX = 0; blue100SphereIndexX < blue100SphereCount; blue100SphereIndexX++) {
             const blue100Sphere = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
@@ -182,7 +185,8 @@ export default class GalleryGame {
     }
     // --------------------------------------------------------------------------------------------
     private createRed200sphere() {
-        for (let red200SphereIndexX = 0; red200SphereIndexX < 12; red200SphereIndexX++) {
+        const red200SphereCount = 12;
+        for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
             const red200Sphere = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
@@ -219,7 +223,8 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createGreen300sphere() {
-        for (let green300SphereIndexX = 0; green300SphereIndexX < 12; green300SphereIndexX++) {
+        const green300SphereCount = 12;
+        for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
             const green300Sphere = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
@@ -241,7 +246,6 @@ export default class GalleryGame {
             });
             green300Sphere.created().then(() => {
                 green300Sphere.collider.isTrigger = true;
-                green300Sphere.collider.isTrigger = true;
                 green300Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
                         this.score += 300;
@@ -257,7 +261,8 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createPurple500sphere() {
-        for (let purple500SphereIndexX = 0; purple500SphereIndexX < 2; purple500SphereIndexX++) {
+        const purple500SphereCount = 2;
+        for (let purple500SphereIndexX = 0; purple500SphereIndexX < purple500SphereCount; purple500SphereIndexX++) {
             const purple500Sphere = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
@@ -279,12 +284,12 @@ export default class GalleryGame {
             });
             purple500Sphere.created().then(() => {
                 purple500Sphere.collider.isTrigger = true;
-                purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
-                    if (otherActor.parent.name === "throwing_dart") {
+                purple500Sphere.collider.onTrigger('trigger-enter', (purpleSphere: Actor) => {
+                    if (purpleSphere.parent.name === "throwing_dart") {
                         this.score += 500;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
                             purple500Sphere.destroy();
-                        this.cancelDart();
+                        this.grabbedDart.destroy();
                     }
                 });
             }).catch();
@@ -312,11 +317,13 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private async createDarts() {
-        for (let dartsIndexX = 0; dartsIndexX < 3; dartsIndexX++) {
-            this.dart = Actor.CreateFromPrefab(this.context, {
+        const dartsCount = 3;
+        for (let dartsIndexX = 0; dartsIndexX < dartsCount; dartsIndexX++) {
+            const dart = Actor.CreateFromPrefab(this.context, {
                 prefabId: this.dartAssets[0].id,
                 // Also apply the following generic actor properties.
                 actor: {
+                    subscriptions: ['transform'],
                     parentId: this.dartsRootActor.id,
                     name: 'Dart',
                     transform: {
@@ -329,40 +336,41 @@ export default class GalleryGame {
                     grabbable: true,
                 }
             });
-            // tslint:disable-next-line: max-line-length
-            this.dart.enableRigidBody({ enabled: true, detectCollisions: true, isKinematic: true });
-            this.dart.onGrab('begin', () => {
-                this.initGrabbedDart();
-            });
-            this.dart.onGrab("end", () => {
-                this.throwDart();
-            });
-            this.dart.subscribe('transform');
+            dart.created().then(() => {
+                // tslint:disable-next-line: max-line-length
+                dart.enableRigidBody({ enabled: true, detectCollisions: true, isKinematic: true });
+                dart.onGrab('begin', () => {
+                    this.grabTheDart();
+                });
+                dart.onGrab("end", () => {
+                    this.throwTheDart();
+                });
+            }).catch();
+            this.dartsArray.push(dart);
         }
     }
-
-
     // --------------------------------------------------------------------------------------------
-    private initGrabbedDart() {
+    private grabTheDart() {
         // Align dart with user's forward direction.
+        this.grabbedDart = this.dartsArray[this.dartsArray.length];
         this.dart.transform.local.rotation = this.playerOne.transform.app.rotation;
     }
 
     // --------------------------------------------------------------------------------------------
-    private throwDart() {
+    private throwTheDart() {
+        this.throwDart = this.grabbedDart;
         let targetPoint = new Vector3(0, 0, 10);
         targetPoint = targetPoint.rotateByQuaternionToRef(this.playerOne.transform.app.rotation, targetPoint);
         targetPoint.add(this.playerOne.transform.app.position);
         // tslint:disable-next-line: max-line-length
-        this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
-        setTimeout(() => this.cancelDart(), 6000);
+        this.throwDart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
+        setTimeout(() => this.throwDart.destroy(), 4000);
     }
 
     // --------------------------------------------------------------------------------------------
     private cancelDart() {
-        this.dart.destroy();
+        this.grabbedDart.destroy();
         // tslint:disable-next-line: no-floating-promises
-        this.createDart();
     }
 
     // --------------------------------------------------------------------------------------------
@@ -408,7 +416,7 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-// TODO: Need to implement the game leave button.
+    // TODO: Need to implement the game leave button.
     private leaveGameButton() {
         // User presses  the Leave Game Button on the table. Call this in endGame.
 
