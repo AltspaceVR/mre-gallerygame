@@ -8,6 +8,7 @@ import {
     Asset,
     AssetContainer,
     ButtonBehavior,
+
     Context,
     PrimitiveShape,
     Quaternion,
@@ -118,7 +119,6 @@ export default class GalleryGame {
                     local: { position: { x: 0, y: 4, z: 0 } }
                 },
                 text: {
-
                     contents: `Gallery Game Score: ${this.score}`,
 
                     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
@@ -409,6 +409,7 @@ export default class GalleryGame {
                     this.started();
                 }
             }, 1000);
+
         });
     }
 
