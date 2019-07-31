@@ -68,7 +68,7 @@ export default class GalleryGame {
         this.createDartsRootActor();
         this.createScoreAndTimerActor();
         await this.preloadAssets();
-        await this.createDart();
+        await this.createDarts();
         await this.createDesk();
         this.createGalleryGameScore();
         this.createGalleryGameRoundTimer();
@@ -257,7 +257,7 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createPurple500sphere() {
-        for (let purple500SphereIndexX = 0; purple500SphereIndexX < 12; purple500SphereIndexX++) {
+        for (let purple500SphereIndexX = 0; purple500SphereIndexX < 2; purple500SphereIndexX++) {
             const purple500Sphere = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
@@ -311,7 +311,7 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-    private async createDart() {
+    private async createDarts() {
         for (let dartsIndexX = 0; dartsIndexX < 3; dartsIndexX++) {
             this.dart = Actor.CreateFromPrefab(this.context, {
                 prefabId: this.dartAssets[0].id,
@@ -408,6 +408,7 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
+// TODO: Need to implement the game leave button.
     private leaveGameButton() {
         // User presses  the Leave Game Button on the table. Call this in endGame.
 
