@@ -53,7 +53,6 @@ export default class GalleryGame {
         this.assets = new AssetContainer(context);
     }
 
-
     // --------------------------------------------------------------------------------------------
     private userJoined(user: User) {
         this.playerOne = Actor.CreateEmpty(this.context, {
@@ -123,15 +122,12 @@ export default class GalleryGame {
                     local: { position: { x: -2, y: 0, z: 0 } }
                 },
                 text: {
-
                     contents: `Gallery Game Score: ${this.score}`,
-
                     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
                     height: 0.29,
                 },
             }
         });
-
     }
 
     // --------------------------------------------------------------------------------------------
@@ -146,7 +142,6 @@ export default class GalleryGame {
                 },
                 text: {
                     contents: `Gallery Game Timer: ${this.timer}`,
-
                     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
                     height: 0.29,
                 },
