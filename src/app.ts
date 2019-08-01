@@ -159,7 +159,7 @@ export default class GalleryGame {
                     local: { position: { x: 0, y: 5, z: 0 } }
                 },
                 text: {
-                    contents: `Gallery Game Leaderboard: ${this.userJoined.name} ${this.galleryGameLeaderboardArray}`,
+                    contents: `Gallery Game Leaderboard: ${this.galleryGameLeaderboardArray}`,
                     color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
                     height: 0.29,
                 },
@@ -428,7 +428,7 @@ export default class GalleryGame {
                 if (this.timer === 0) {
                     clearInterval(gamePlayButtonInitialed);
                     // this.gameEndScore = this.score;
-                    this.galleryGameLeaderboardArray.push(this.score);
+                    this.galleryGameLeaderboardArray.push(this.score + " " + this.userJoined.name);
                     this.galleryGameLeaderboardArray.sort();
                     this.galleryGameLeaderboardArray.reverse();
                     // this.sortedGalleryGameLeaderboard = this.leaderboardArray.sort();
