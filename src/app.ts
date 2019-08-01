@@ -14,16 +14,30 @@ import {
     User,
     Vector3,
 } from '@microsoft/mixed-reality-extension-sdk';
+import { toUnicode } from 'punycode';
 /**
  * The main class of this app. All the logic goes here.
  */
 export default class GalleryGame {
+    private playerOne: Actor;
     private spheresRootActor: Actor;
     private dartsRootActor: Actor;
-    private scoreAndTimerRootActor: Actor;
-    private playerOne: Actor;
+    private scoreTimerLeaderboardRootActor: Actor;
+    private assets: AssetContainer;
+    private score: number;
+    private timer: number;
     private galleryGameScore: Actor;
     private galleryGameRoundTimer: Actor;
+    public galleryGameLeaderboard: Actor;
+    public galleryGameLeaderboardArray: any[10] = [];
+    private deskAsset: Asset[] = [];
+    public desk: Actor;
+    private dartAssets: Asset[] = [];
+    public dart: Actor;
+    public currentDart: Actor;
+    public dartsArray: Actor[] = [];
+    private gamePlayButtonAsset: Asset[] = [];
+    public gamePlayButton: Actor;
     public blue100Sphere: Actor;
     private blue100SphereArray: Actor[] = [];
     public red200Sphere: Actor;
@@ -32,18 +46,6 @@ export default class GalleryGame {
     private green300SphereArray: Actor[] = [];
     public purple500Sphere: Actor;
     private purple500SphereArray: Actor[] = [];
-    private score: number;
-    private timer: number;
-    private assets: AssetContainer;
-    public desk: Actor;
-    private deskAsset: Asset[] = [];
-    public dart: Actor;
-    public grabbedDart: Actor;
-    public throwDart: Actor;
-    public dartsArray: Actor[] = [];
-    private dartAssets: Asset[] = [];
-    public gamePlayButton: Actor;
-    private gamePlayButtonAsset: Asset[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(async () => await this.started());
@@ -71,10 +73,11 @@ export default class GalleryGame {
         this.createDartsRootActor();
         this.createScoreAndTimerActor();
         await this.preloadAssets();
-        await this.createDarts();
         await this.createDesk();
+        await this.createDarts();
         this.createGalleryGameScore();
         this.createGalleryGameRoundTimer();
+        this.createGalleryGameLeaderboard();
         this.createBlue100sphere();
         this.createRed200sphere();
         this.createGreen300sphere();
@@ -105,7 +108,7 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createScoreAndTimerActor() {
-        this.scoreAndTimerRootActor = Actor.CreateEmpty(this.context);
+        this.scoreTimerLeaderboardRootActor = Actor.CreateEmpty(this.context);
     }
 
     // --------------------------------------------------------------------------------------------
@@ -114,9 +117,9 @@ export default class GalleryGame {
         this.galleryGameScore = Actor.CreateEmpty(this.context, {
             actor: {
                 name: 'Score',
-                parentId: this.scoreAndTimerRootActor.id,
+                parentId: this.scoreTimerLeaderboardRootActor.id,
                 transform: {
-                    local: { position: { x: 0, y: 4, z: 0 } }
+                    local: { position: { x: -2, y: 0, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Score: ${this.score}`,
@@ -129,13 +132,13 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     private createGalleryGameRoundTimer() {
-        this.timer = 30;
+        this.timer = 15;
         this.galleryGameRoundTimer = Actor.CreateEmpty(this.context, {
             actor: {
+                parentId: this.scoreTimerLeaderboardRootActor.id,
                 name: 'Timer',
-                parentId: this.scoreAndTimerRootActor.id,
                 transform: {
-                    local: { position: { x: 0, y: 0, z: 0 } }
+                    local: { position: { x: 2, y: 0, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Timer: ${this.timer}`,
@@ -146,6 +149,23 @@ export default class GalleryGame {
         });
     }
 
+    // --------------------------------------------------------------------------------------------
+    private createGalleryGameLeaderboard() {
+        this.galleryGameLeaderboard = Actor.CreateEmpty(this.context, {
+            actor: {
+                parentId: this.scoreTimerLeaderboardRootActor.id,
+                name: 'Leaderboard',
+                transform: {
+                    local: { position: { x: 0, y: 5, z: 0 } }
+                },
+                text: {
+                    contents: `Gallery Game Leaderboard: ${this.userJoined.name} ${this.galleryGameLeaderboardArray}`,
+                    color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
+                    height: 0.29,
+                },
+            }
+        });
+    }
     // --------------------------------------------------------------------------------------------
     private createBlue100sphere() {
         const blue100SphereCount = 12;
@@ -159,8 +179,8 @@ export default class GalleryGame {
                 },
                 addCollider: true,
                 actor: {
-                    name: 'Blue Sphere',
                     parentId: this.spheresRootActor.id,
+                    name: 'Blue Sphere',
                     transform: {
                         local: {
                             position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
@@ -176,7 +196,7 @@ export default class GalleryGame {
                         this.score += 100;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
                             blue100Sphere.destroy();
-                        this.cancelDart();
+                        this.dart.destroy();
                     }
                 });
             }).catch();
@@ -196,8 +216,8 @@ export default class GalleryGame {
                 },
                 addCollider: true,
                 actor: {
-                    name: 'Red Sphere',
                     parentId: this.spheresRootActor.id,
+                    name: 'Red Sphere',
                     transform: {
                         local: {
                             position: { x: 7 - (red200SphereIndexX), y: 1.6, z: 0 },
@@ -213,7 +233,7 @@ export default class GalleryGame {
                         this.score += 200;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
                             red200Sphere.destroy();
-                        this.cancelDart();
+                        this.dart.destroy();
                     }
                 });
             }).catch();
@@ -234,8 +254,8 @@ export default class GalleryGame {
                 },
                 addCollider: true,
                 actor: {
-                    name: 'Green Sphere',
                     parentId: this.spheresRootActor.id,
+                    name: 'Green Sphere',
                     transform: {
                         local: {
                             position: { x: 7 - (green300SphereIndexX), y: 2.4, z: 0 },
@@ -251,7 +271,7 @@ export default class GalleryGame {
                         this.score += 300;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
                             green300Sphere.destroy();
-                        this.cancelDart();
+                        this.dart.destroy();
                     }
                 });
             }).catch();
@@ -272,8 +292,8 @@ export default class GalleryGame {
                 },
                 addCollider: true,
                 actor: {
-                    name: 'Purple Sphere',
                     parentId: this.spheresRootActor.id,
+                    name: 'Purple Sphere',
                     transform: {
                         local: {
                             position: { x: 7 - (purple500SphereIndexX), y: 3.2, z: 0 },
@@ -284,12 +304,12 @@ export default class GalleryGame {
             });
             purple500Sphere.created().then(() => {
                 purple500Sphere.collider.isTrigger = true;
-                purple500Sphere.collider.onTrigger('trigger-enter', (purpleSphere: Actor) => {
-                    if (purpleSphere.parent.name === "throwing_dart") {
+                purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
                         this.score += 500;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
                             purple500Sphere.destroy();
-                        this.grabbedDart.destroy();
+                        this.dart.destroy();
                     }
                 });
             }).catch();
@@ -297,6 +317,8 @@ export default class GalleryGame {
         }
     }
 
+    // --------------------------------------------------------------------------------------------
+    // private spheresInflateDeflate
     // --------------------------------------------------------------------------------------------
     private async createDesk() {
         this.desk = Actor.CreateFromPrefab(this.context, {
@@ -319,13 +341,13 @@ export default class GalleryGame {
     private async createDarts() {
         const dartsCount = 3;
         for (let dartsIndexX = 0; dartsIndexX < dartsCount; dartsIndexX++) {
-            const dart = Actor.CreateFromPrefab(this.context, {
+            this.dart = Actor.CreateFromPrefab(this.context, {
                 prefabId: this.dartAssets[0].id,
                 // Also apply the following generic actor properties.
                 actor: {
-                    subscriptions: ['transform'],
                     parentId: this.dartsRootActor.id,
                     name: 'Dart',
+                    subscriptions: ['transform'],
                     transform: {
                         local: {
                             position: { x: 3 - (dartsIndexX), y: -0.5, z: - 3 },
@@ -333,44 +355,48 @@ export default class GalleryGame {
                             rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
                         }
                     },
+                    rigidBody: {
+                        enabled: true,
+                        detectCollisions: true,
+                        isKinematic: true,
+                    },
                     grabbable: true,
                 }
             });
-            dart.created().then(() => {
-                // tslint:disable-next-line: max-line-length
-                dart.enableRigidBody({ enabled: true, detectCollisions: true, isKinematic: true });
-                dart.onGrab('begin', () => {
+            this.dart.created().then(() => {
+                this.dart.onGrab('begin', () => {
                     this.grabTheDart();
                 });
-                dart.onGrab("end", () => {
+                this.dart.onGrab("end", () => {
                     this.throwTheDart();
                 });
             }).catch();
-            this.dartsArray.push(dart);
+            this.dartsArray.push(this.dart);
         }
     }
+
     // --------------------------------------------------------------------------------------------
-    private grabTheDart() {
+    public grabTheDart() {
         // Align dart with user's forward direction.
-        this.grabbedDart = this.dartsArray[this.dartsArray.length];
         this.dart.transform.local.rotation = this.playerOne.transform.app.rotation;
     }
 
     // --------------------------------------------------------------------------------------------
     private throwTheDart() {
-        this.throwDart = this.grabbedDart;
         let targetPoint = new Vector3(0, 0, 10);
         targetPoint = targetPoint.rotateByQuaternionToRef(this.playerOne.transform.app.rotation, targetPoint);
-        targetPoint.add(this.playerOne.transform.app.position);
+        targetPoint = targetPoint.add(this.playerOne.transform.app.position);
         // tslint:disable-next-line: max-line-length
-        this.throwDart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
-        setTimeout(() => this.throwDart.destroy(), 4000);
+        this.dart.animateTo({ transform: { local: { position: targetPoint } } }, 3, AnimationEaseCurves.Linear);
+        setTimeout(async () => {
+            this.cancelDart();
+            await this.createDarts();
+        }, 4000);
     }
 
     // --------------------------------------------------------------------------------------------
     private cancelDart() {
-        this.grabbedDart.destroy();
-        // tslint:disable-next-line: no-floating-promises
+        this.dart.destroy();
     }
 
     // --------------------------------------------------------------------------------------------
@@ -401,13 +427,25 @@ export default class GalleryGame {
                 this.galleryGameRoundTimer.text.contents = `Gallery Game Timer: ${this.timer}`;
                 if (this.timer === 0) {
                     clearInterval(gamePlayButtonInitialed);
-                    this.scoreAndTimerRootActor.destroy();
+                    // this.gameEndScore = this.score;
+                    this.galleryGameLeaderboardArray.push(this.score);
+                    this.galleryGameLeaderboardArray.sort();
+                    this.galleryGameLeaderboardArray.reverse();
+                    // this.sortedGalleryGameLeaderboard = this.leaderboardArray.sort();
+
+                    // if (this.gameEndScore < this.score) {
+                    //     this.leaderboardArray.push(this.userJoined.name + " " + this.score);
+
+                    // } else {
+                    // }
+                    this.scoreTimerLeaderboardRootActor.destroy();
                     if (this.spheresRootActor != null) {
                         if (this.dartsRootActor != null) {
                             this.dartsRootActor.destroy();
                         }
                         this.spheresRootActor.destroy();
                     }
+
                     // tslint:disable-next-line: no-floating-promises
                     this.started();
                 }
@@ -417,9 +455,9 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     // TODO: Need to implement the game leave button.
-    private leaveGameButton() {
-        // User presses  the Leave Game Button on the table. Call this in endGame.
+    // private leaveGameButton() {
+    //     // User presses  the Leave Game Button on the table. Call this in endGame.
 
-    }
+    // }
 
 }
