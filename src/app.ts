@@ -14,7 +14,6 @@ import {
     User,
     Vector3,
 } from '@microsoft/mixed-reality-extension-sdk';
-import { toUnicode } from 'punycode';
 /**
  * The main class of this app. All the logic goes here.
  */
@@ -397,6 +396,7 @@ export default class GalleryGame {
     // --------------------------------------------------------------------------------------------
     private cancelDart() {
         this.dart.destroy();
+
     }
 
     // --------------------------------------------------------------------------------------------
@@ -439,6 +439,7 @@ export default class GalleryGame {
                     // } else {
                     // }
                     this.scoreTimerLeaderboardRootActor.destroy();
+
                     if (this.spheresRootActor != null) {
                         if (this.dartsRootActor != null) {
                             this.dartsRootActor.destroy();
@@ -450,6 +451,7 @@ export default class GalleryGame {
                     this.started();
                 }
             }, 1000);
+
         });
     }
 
@@ -459,5 +461,4 @@ export default class GalleryGame {
     //     // User presses  the Leave Game Button on the table. Call this in endGame.
 
     // }
-
 }
