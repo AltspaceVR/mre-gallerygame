@@ -180,6 +180,7 @@ export default class GalleryGame {
                 actor: {
                     parentId: this.spheresRootActor.id,
                     name: 'Blue Sphere',
+
                     transform: {
                         local: {
                             position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
@@ -396,7 +397,6 @@ export default class GalleryGame {
     // --------------------------------------------------------------------------------------------
     private cancelDart() {
         this.dart.destroy();
-
     }
 
     // --------------------------------------------------------------------------------------------
@@ -439,14 +439,12 @@ export default class GalleryGame {
                     // } else {
                     // }
                     this.scoreTimerLeaderboardRootActor.destroy();
-
                     if (this.spheresRootActor != null) {
                         if (this.dartsRootActor != null) {
                             this.dartsRootActor.destroy();
                         }
                         this.spheresRootActor.destroy();
                     }
-
                     // tslint:disable-next-line: no-floating-promises
                     this.started();
                 }
