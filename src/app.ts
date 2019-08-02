@@ -38,13 +38,15 @@ export default class GalleryGame {
     private gamePlayButtonAsset: Asset[] = [];
     public gamePlayButton: Actor;
     public blue100Sphere: Actor;
-    private blue100SphereArray: Actor[] = [];
+    // private blue100SphereArray: Actor[] = [];
     public red200Sphere: Actor;
-    private red200SphereArray: Actor[] = [];
+    // private red200SphereArray: Actor[] = [];
     public green300Sphere: Actor;
-    private green300SphereArray: Actor[] = [];
+    // private green300SphereArray: Actor[] = [];
     public purple500Sphere: Actor;
-    private purple500SphereArray: Actor[] = [];
+    // private purple500SphereArray: Actor[] = [];
+    public spheresInflateDeflate: Actor[] = [];
+    private spheresArray: Actor[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(async () => await this.started());
@@ -81,6 +83,7 @@ export default class GalleryGame {
         this.createRed200sphere();
         this.createGreen300sphere();
         this.createPurple500sphere();
+        // this.createSpheresInflateDeflate();
         this.createPlayButton();
         this.startGame();
     }
@@ -184,7 +187,7 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
@@ -200,7 +203,7 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.blue100SphereArray.push(blue100Sphere);
+            this.spheresArray.push(blue100Sphere);
         }
     }
     // --------------------------------------------------------------------------------------------
@@ -221,7 +224,7 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (red200SphereIndexX), y: 1.6, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
@@ -237,7 +240,7 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.red200SphereArray.push(red200Sphere);
+            this.spheresArray.push(red200Sphere);
         }
     }
 
@@ -259,7 +262,7 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (green300SphereIndexX), y: 2.4, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
@@ -275,7 +278,7 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.green300SphereArray.push(green300Sphere);
+            this.spheresArray.push(green300Sphere);
         }
     }
 
@@ -297,12 +300,13 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (purple500SphereIndexX), y: 3.2, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
             purple500Sphere.created().then(() => {
+                purple500Sphere.animateTo({transform: { local: { scale: { x: 0.3, y: 0.4, z: 0.3}}}}, 5, AnimationEaseCurves.EaseInOutSine);
                 purple500Sphere.collider.isTrigger = true;
                 purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -313,12 +317,15 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.purple500SphereArray.push(purple500Sphere);
+            this.spheresArray.push(purple500Sphere);
         }
     }
 
     // --------------------------------------------------------------------------------------------
-    // private spheresInflateDeflate
+    // private createSpheresInflateDeflate() {
+    //     this.spheresInflateDeflate = this.spheresArray;
+    //     this.spheresInflateDeflate.
+    // }
     // --------------------------------------------------------------------------------------------
     private async createDesk() {
         this.desk = Actor.CreateFromPrefab(this.context, {
