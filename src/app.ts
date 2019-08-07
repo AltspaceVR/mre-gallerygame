@@ -4,6 +4,7 @@
  */
 import {
     Actor,
+    ActorTransform,
     AnimationEaseCurves,
     Asset,
     AssetContainer,
@@ -26,7 +27,9 @@ export default class GalleryGame {
     private scoreTimerLeaderboardRootActor: Actor;
     private assets: AssetContainer;
     private score: number;
-    private timer: number;
+    public timer: number;
+    public purple500SphereTimer: number;
+    public startGameTimer: number;
     private galleryGameScore: Actor;
     private galleryGameRoundTimer: Actor;
     public galleryGameLeaderboard: Actor;
@@ -39,14 +42,21 @@ export default class GalleryGame {
     public dartsArray: Actor[] = [];
     private gamePlayButtonAsset: Asset[] = [];
     public gamePlayButton: Actor;
-    public blue100Sphere: Actor;
+    public blue100SphereLeftBoard: Actor;
+    public blue100SphereCenterBoard: Actor;
+    public blue100SphereRightBoard: Actor;
     private blue100SphereArray: Actor[] = [];
-    public red200Sphere: Actor;
+    public red200SphereLeftBoard: Actor;
+    public red200SphereCenterBoard: Actor;
+    public red200SphereRightBoard: Actor;
     private red200SphereArray: Actor[] = [];
-    public green300Sphere: Actor;
+    public green300SphereLeftBoard: Actor;
+    public green300SphereCenterBoard: Actor;
+    public green300SphereRightBoard: Actor;
     private green300SphereArray: Actor[] = [];
     public purple500Sphere: Actor;
-    private purple500SphereArray: Actor[] = [];
+    public purple500SphereArray: Actor[] = [];
+    public spherePopBoard: Actor;
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(async () => await this.started());
@@ -74,15 +84,22 @@ export default class GalleryGame {
         this.createDartsRootActor();
         this.createScoreAndTimerActor();
         await this.preloadAssets();
-        await this.createDesk();
+        // await this.createDesk();
         await this.createDarts();
         this.createGalleryGameScore();
         this.createGalleryGameRoundTimer();
         this.createGalleryGameLeaderboard();
-        this.createBlue100sphere();
-        this.createRed200sphere();
-        this.createGreen300sphere();
+        this.createBlue100sphereLeftBoard();
+        this.createBlue100sphereCenterBoard();
+        this.createBlue100sphereRightBoard();
+        this.createRed200sphereRightBoard();
+        this.createRed200sphereCenterBoard();
+        this.createRed200sphereLeftBoard();
+        this.createGreen300sphereLeftBoard();
+        this.createGreen300sphereCenterBoard();
+        this.createGreen300sphereRightBoard();
         this.createPurple500sphere();
+        this.createSpherePopBoard();
         this.createPlayButton();
         this.startGame();
     }
@@ -132,12 +149,13 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-    private createGalleryGameRoundTimer() {
+    public createGalleryGameRoundTimer() {
         this.timer = 15;
         this.galleryGameRoundTimer = Actor.CreateEmpty(this.context, {
             actor: {
                 parentId: this.scoreTimerLeaderboardRootActor.id,
                 name: 'Timer',
+                subscriptions: ['transform'],
                 transform: {
                     local: { position: { x: 2, y: 0, z: 0 } }
                 },
@@ -157,7 +175,7 @@ export default class GalleryGame {
                 parentId: this.scoreTimerLeaderboardRootActor.id,
                 name: 'Leaderboard',
                 transform: {
-                    local: { position: { x: 0, y: 5, z: 0 } }
+                    local: { position: { x: 0, y: 2, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Leaderboard: ${this.galleryGameLeaderboardArray}`,
@@ -167,11 +185,29 @@ export default class GalleryGame {
             }
         });
     }
+
     // --------------------------------------------------------------------------------------------
-    private createBlue100sphere() {
-        const blue100SphereCount = 12;
+    private createSpherePopBoard() {
+        this.spherePopBoard = Actor.CreateFromGltf(this.context, {
+            resourceUrl: `${this.baseUrl}/BalloonPopBoard.glb`,
+            actor: {
+                parentId: this.spheresRootActor.id,
+                name: 'Sphere Pop Board',
+                transform: {
+                    local: {
+                        position: { x: -0.9, y: -2, z: 0 },
+                        scale: { x: 3, y: 3, z: 3 },
+                    }
+                },
+            },
+        });
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createBlue100sphereLeftBoard() {
+        const blue100SphereCount = 4;
         for (let blue100SphereIndexX = 0; blue100SphereIndexX < blue100SphereCount; blue100SphereIndexX++) {
-            const blue100Sphere = Actor.CreatePrimitive(this.context, {
+            const blue100SphereLeftBoard = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
                     radius: 0.9,
@@ -182,7 +218,84 @@ export default class GalleryGame {
                 actor: {
                     parentId: this.spheresRootActor.id,
                     name: 'Blue Sphere',
+                    transform: {
+                        local: {
+                            position: { x: -3 - (blue100SphereIndexX), y: .8, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            blue100SphereLeftBoard.created().then(() => {
+                blue100SphereLeftBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                blue100SphereLeftBoard.collider.isTrigger = true;
+                blue100SphereLeftBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 100;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            blue100SphereLeftBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.blue100SphereArray.push(this.blue100SphereLeftBoard);
+        }
+    }
 
+    // --------------------------------------------------------------------------------------------
+    private createBlue100sphereCenterBoard() {
+        const blue100SphereCount = 4;
+        for (let blue100SphereIndexX = 0; blue100SphereIndexX < blue100SphereCount; blue100SphereIndexX++) {
+            const blue100SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Blue Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 2 - (blue100SphereIndexX), y: .8, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            blue100SphereCenterBoard.created().then(() => {
+                blue100SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                blue100SphereCenterBoard.collider.isTrigger = true;
+                blue100SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 100;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            blue100SphereCenterBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.blue100SphereArray.push(this.blue100SphereCenterBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createBlue100sphereRightBoard() {
+        const blue100SphereCount = 4;
+        for (let blue100SphereIndexX = 0; blue100SphereIndexX < blue100SphereCount; blue100SphereIndexX++) {
+            const blue100SphereRightBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Blue Sphere',
                     transform: {
                         local: {
                             position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
@@ -191,26 +304,27 @@ export default class GalleryGame {
                     },
                 }
             });
-            blue100Sphere.created().then(() => {
-                blue100Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
-                blue100Sphere.collider.isTrigger = true;
-                blue100Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+            blue100SphereRightBoard.created().then(() => {
+                blue100SphereRightBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                blue100SphereRightBoard.collider.isTrigger = true;
+                blue100SphereRightBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
                         this.score += 100;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
-                            blue100Sphere.destroy();
+                            blue100SphereRightBoard.destroy();
                         this.dart.destroy();
                     }
                 });
             }).catch();
-            this.blue100SphereArray.push(blue100Sphere);
+            this.blue100SphereArray.push(this.blue100SphereRightBoard);
         }
     }
+
     // --------------------------------------------------------------------------------------------
-    private createRed200sphere() {
-        const red200SphereCount = 12;
+    private createRed200sphereLeftBoard() {
+        const red200SphereCount = 4;
         for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
-            const red200Sphere = Actor.CreatePrimitive(this.context, {
+            const red200SphereLeftBoard = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
                     radius: 0.9,
@@ -223,33 +337,111 @@ export default class GalleryGame {
                     name: 'Red Sphere',
                     transform: {
                         local: {
-                            position: { x: 7 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            position: { x: -2 - (red200SphereIndexX), y: 1.6, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
-            red200Sphere.created().then(() => {
-                red200Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
-                red200Sphere.collider.isTrigger = true;
-                red200Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+            red200SphereLeftBoard.created().then(() => {
+                red200SphereLeftBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                red200SphereLeftBoard.collider.isTrigger = true;
+                red200SphereLeftBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
                         this.score += 200;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
-                            red200Sphere.destroy();
+                            red200SphereLeftBoard.destroy();
                         this.dart.destroy();
                     }
                 });
             }).catch();
-            this.red200SphereArray.push(red200Sphere);
+            this.red200SphereArray.push(red200SphereLeftBoard);
         }
     }
 
     // --------------------------------------------------------------------------------------------
-    private createGreen300sphere() {
-        const green300SphereCount = 12;
+    private createRed200sphereCenterBoard() {
+        const red200SphereCount = 4;
+        for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
+            const red200SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Red Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 2 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            red200SphereCenterBoard.created().then(() => {
+                red200SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                red200SphereCenterBoard.collider.isTrigger = true;
+                red200SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 200;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            red200SphereCenterBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.red200SphereArray.push(red200SphereCenterBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createRed200sphereRightBoard() {
+        const red200SphereCount = 4;
+        for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
+            const createRed200sphereRightBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Red Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 6 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            createRed200sphereRightBoard.created().then(() => {
+                createRed200sphereRightBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                createRed200sphereRightBoard.collider.isTrigger = true;
+                createRed200sphereRightBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 200;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            createRed200sphereRightBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.red200SphereArray.push(createRed200sphereRightBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createGreen300sphereLeftBoard() {
+        const green300SphereCount = 4;
         for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
-            const green300Sphere = Actor.CreatePrimitive(this.context, {
+            const green300sphereLeftBoard = Actor.CreatePrimitive(this.context, {
                 definition: {
                     shape: PrimitiveShape.Sphere,
                     radius: 0.9,
@@ -262,25 +454,103 @@ export default class GalleryGame {
                     name: 'Green Sphere',
                     transform: {
                         local: {
-                            position: { x: 7 - (green300SphereIndexX), y: 2.4, z: 0 },
+                            position: { x: -2 - (green300SphereIndexX), y: 2.4, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
-            green300Sphere.created().then(() => {
-                green300Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
-                green300Sphere.collider.isTrigger = true;
-                green300Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+            green300sphereLeftBoard.created().then(() => {
+                green300sphereLeftBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                green300sphereLeftBoard.collider.isTrigger = true;
+                green300sphereLeftBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
                         this.score += 300;
                         this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
-                            green300Sphere.destroy();
+                            green300sphereLeftBoard.destroy();
                         this.dart.destroy();
                     }
                 });
             }).catch();
-            this.green300SphereArray.push(green300Sphere);
+            this.green300SphereArray.push(green300sphereLeftBoard);
+        }
+    }
+
+        // --------------------------------------------------------------------------------------------
+        private createGreen300sphereCenterBoard() {
+            const green300SphereCount = 4;
+            for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
+                const green300SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                    definition: {
+                        shape: PrimitiveShape.Sphere,
+                        radius: 0.9,
+                        uSegments: 8,
+                        vSegments: 4
+                    },
+                    addCollider: true,
+                    actor: {
+                        parentId: this.spheresRootActor.id,
+                        name: 'Green Sphere',
+                        transform: {
+                            local: {
+                                position: { x: 2 - (green300SphereIndexX), y: 2.4, z: 0 },
+                                scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            }
+                        },
+                    }
+                });
+                green300SphereCenterBoard.created().then(() => {
+                    green300SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                    green300SphereCenterBoard.collider.isTrigger = true;
+                    green300SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                        if (otherActor.parent.name === "throwing_dart") {
+                            this.score += 300;
+                            this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                                green300SphereCenterBoard.destroy();
+                            this.dart.destroy();
+                        }
+                    });
+                }).catch();
+                this.green300SphereArray.push(green300SphereCenterBoard);
+            }
+        }
+
+    // --------------------------------------------------------------------------------------------
+    private createGreen300sphereRightBoard() {
+        const green300SphereCount = 4;
+        for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
+            const green300SphereRightBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Green Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 6 - (green300SphereIndexX), y: 2.4, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            green300SphereRightBoard.created().then(() => {
+                green300SphereRightBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                green300SphereRightBoard.collider.isTrigger = true;
+                green300SphereRightBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 300;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            green300SphereRightBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.green300SphereArray.push(green300SphereRightBoard);
         }
     }
 
@@ -309,7 +579,14 @@ export default class GalleryGame {
                 }
             });
             purple500Sphere.created().then(() => {
-                purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+
+                // if (this.timer / 3) {
+                //     console.log("this is working...", this.timer);
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+                // } else {
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                // purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 purple500Sphere.collider.isTrigger = true;
                 purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -319,28 +596,48 @@ export default class GalleryGame {
                         this.dart.destroy();
                     }
                 });
+                // const purple500SphereBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
+                // purple500SphereBehavior.onClick(() => {
+                const purple500SphereBehaviorInterval = setInterval(() => {
+                    this.purple500SphereTimer--;
+                    if (this.purple500SphereTimer / 3) {
+                        console.log('this is working', this.purple500SphereTimer);
+                        purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                    } else {
+                        purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                    }
+                    if (this.purple500SphereTimer === 0) {
+                        clearInterval(purple500SphereBehaviorInterval);
+                    }
+                }, 1000);
+                // });
             }).catch();
-            this.purple500SphereArray.push(purple500Sphere);
+            this.purple500SphereArray.push(this.purple500Sphere);
         }
     }
 
     // --------------------------------------------------------------------------------------------
-    private async createDesk() {
-        this.desk = Actor.CreateFromPrefab(this.context, {
-            prefabId: this.deskAsset[0].id,
-            // Also apply the following generic actor properties.
-            actor: {
-                name: 'Desk',
-                transform: {
-                    local: {
-                        position: { x: 1.8, y: -2, z: -3 },
-                        scale: { x: 0.4, y: 0.4, z: 0.4 },
-                        rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
-                    }
-                }
-            }
-        });
-    }
+    // private allSpheresRandomlyInflateDeflate(array: any) {
+    //     Math.floor(Math.random() * (array + 1) + array);
+    // }
+
+    // --------------------------------------------------------------------------------------------
+    // private async createDesk() {
+    //     this.desk = Actor.CreateFromPrefab(this.context, {
+    //         prefabId: this.deskAsset[0].id,
+    //         // Also apply the following generic actor properties.
+    //         actor: {
+    //             name: 'Desk',
+    //             transform: {
+    //                 local: {
+    //                     position: { x: 1.8, y: -2, z: -3 },
+    //                     scale: { x: 0.4, y: 0.4, z: 0.4 },
+    //                     rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
     // --------------------------------------------------------------------------------------------
     private async createDarts() {
@@ -424,13 +721,23 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     public startGame() {
+        this.startGameTimer = this.timer;
         const gamePlayButtonBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
         // When Game Play Button is clicked trigger the game play action.
         gamePlayButtonBehavior.onClick(() => {
             const gamePlayButtonInitialed = setInterval(() => {
-                this.timer--;
-                this.galleryGameRoundTimer.text.contents = `Gallery Game Timer: ${this.timer}`;
-                if (this.timer === 0) {
+                this.startGameTimer--;
+                console.log("this working", this.startGameTimer);
+                this.galleryGameRoundTimer.text.contents = `Gallery Game Timer: ${this.startGameTimer}`;
+                // if (this.timer / 6) {
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                // if (this.timer / 3) {
+                //     this.purple500SphereArray[this.purple500SphereArray.length].animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+                // } else {
+                //     this.purple500SphereArray[this.purple500SphereArray.length].animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                if (this.startGameTimer === 0) {
                     clearInterval(gamePlayButtonInitialed);
                     this.galleryGameLeaderboardArray.push(this.score + " " + this.userJoined.name);
                     this.galleryGameLeaderboardArray.sort();
