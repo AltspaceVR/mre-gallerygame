@@ -4,6 +4,7 @@
  */
 import {
     Actor,
+    ActorTransform,
     AnimationEaseCurves,
     Asset,
     AssetContainer,
@@ -15,6 +16,7 @@ import {
     User,
     Vector3,
 } from '@microsoft/mixed-reality-extension-sdk';
+import { randomBytes } from 'crypto';
 import { inflate } from 'zlib';
 /**
  * The main class of this app. All the logic goes here.
@@ -26,7 +28,9 @@ export default class GalleryGame {
     private scoreTimerLeaderboardRootActor: Actor;
     private assets: AssetContainer;
     private score: number;
-    private timer: number;
+    public timer: number;
+    public purple500SphereTimer: number;
+    public startGameTimer: number;
     private galleryGameScore: Actor;
     private galleryGameRoundTimer: Actor;
     public galleryGameLeaderboard: Actor;
@@ -46,7 +50,7 @@ export default class GalleryGame {
     public green300Sphere: Actor;
     private green300SphereArray: Actor[] = [];
     public purple500Sphere: Actor;
-    private purple500SphereArray: Actor[] = [];
+    public purple500SphereArray: Actor[] = [];
 
     constructor(private context: Context, private baseUrl: string) {
         this.context.onStarted(async () => await this.started());
@@ -132,12 +136,13 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-    private createGalleryGameRoundTimer() {
+    public createGalleryGameRoundTimer() {
         this.timer = 15;
         this.galleryGameRoundTimer = Actor.CreateEmpty(this.context, {
             actor: {
                 parentId: this.scoreTimerLeaderboardRootActor.id,
                 name: 'Timer',
+                subscriptions: ['transform'],
                 transform: {
                     local: { position: { x: 2, y: 0, z: 0 } }
                 },
@@ -192,7 +197,7 @@ export default class GalleryGame {
                 }
             });
             blue100Sphere.created().then(() => {
-                blue100Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                blue100Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 blue100Sphere.collider.isTrigger = true;
                 blue100Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -203,7 +208,7 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.blue100SphereArray.push(blue100Sphere);
+            this.blue100SphereArray.push(this.blue100Sphere);
         }
     }
     // --------------------------------------------------------------------------------------------
@@ -230,7 +235,7 @@ export default class GalleryGame {
                 }
             });
             red200Sphere.created().then(() => {
-                red200Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                red200Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 red200Sphere.collider.isTrigger = true;
                 red200Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -241,7 +246,7 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.red200SphereArray.push(red200Sphere);
+            this.red200SphereArray.push(this.red200Sphere);
         }
     }
 
@@ -269,7 +274,7 @@ export default class GalleryGame {
                 }
             });
             green300Sphere.created().then(() => {
-                green300Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                green300Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 green300Sphere.collider.isTrigger = true;
                 green300Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -280,12 +285,13 @@ export default class GalleryGame {
                     }
                 });
             }).catch();
-            this.green300SphereArray.push(green300Sphere);
+            this.green300SphereArray.push(this.green300Sphere);
         }
     }
 
     // --------------------------------------------------------------------------------------------
     public createPurple500sphere() {
+        this.purple500SphereTimer = this.timer;
         const purple500SphereCount = 2;
         for (let purple500SphereIndexX = 0; purple500SphereIndexX < purple500SphereCount; purple500SphereIndexX++) {
             const purple500Sphere = Actor.CreatePrimitive(this.context, {
@@ -309,7 +315,14 @@ export default class GalleryGame {
                 }
             });
             purple500Sphere.created().then(() => {
-                purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+
+                // if (this.timer / 3) {
+                //     console.log("this is working...", this.timer);
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+                // } else {
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                // purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 purple500Sphere.collider.isTrigger = true;
                 purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -319,10 +332,30 @@ export default class GalleryGame {
                         this.dart.destroy();
                     }
                 });
+                // const purple500SphereBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
+                // purple500SphereBehavior.onClick(() => {
+                const purple500SphereBehaviorInterval = setInterval(() => {
+                    this.purple500SphereTimer--;
+                    if (this.purple500SphereTimer / 3) {
+                        console.log('this is working', this.purple500SphereTimer);
+                        purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                    } else {
+                    purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                    }
+                    if (this.purple500SphereTimer === 0) {
+                        clearInterval(purple500SphereBehaviorInterval);
+                    }
+                }, 1000);
+                // });
             }).catch();
-            this.purple500SphereArray.push(purple500Sphere);
+            this.purple500SphereArray.push(this.purple500Sphere);
         }
     }
+
+    // --------------------------------------------------------------------------------------------
+    // private allSpheresRandomlyInflateDeflate(array: any) {
+    //     Math.floor(Math.random() * (array + 1) + array);
+    // }
 
     // --------------------------------------------------------------------------------------------
     private async createDesk() {
@@ -424,13 +457,23 @@ export default class GalleryGame {
 
     // --------------------------------------------------------------------------------------------
     public startGame() {
+        this.startGameTimer = this.timer;
         const gamePlayButtonBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
         // When Game Play Button is clicked trigger the game play action.
         gamePlayButtonBehavior.onClick(() => {
             const gamePlayButtonInitialed = setInterval(() => {
-                this.timer--;
+                this.startGameTimer--;
+                console.log("this working", this.startGameTimer);
                 this.galleryGameRoundTimer.text.contents = `Gallery Game Timer: ${this.timer}`;
-                if (this.timer === 0) {
+                // if (this.timer / 6) {
+                //     this.purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                // if (this.timer / 3) {
+                //     this.purple500SphereArray[this.purple500SphereArray.length].animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
+                // } else {
+                //     this.purple500SphereArray[this.purple500SphereArray.length].animateTo({ transform: { local: { scale: { x: 0.1, y: 0.1, z: 0.1 } } } }, 1, AnimationEaseCurves.EaseInOutSine);
+                // }
+                if (this.startGameTimer === 0) {
                     clearInterval(gamePlayButtonInitialed);
                     this.galleryGameLeaderboardArray.push(this.score + " " + this.userJoined.name);
                     this.galleryGameLeaderboardArray.sort();
