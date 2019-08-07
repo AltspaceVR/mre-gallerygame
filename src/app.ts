@@ -11,9 +11,11 @@ import {
     Context,
     PrimitiveShape,
     Quaternion,
+    Transform,
     User,
     Vector3,
 } from '@microsoft/mixed-reality-extension-sdk';
+import { inflate } from 'zlib';
 /**
  * The main class of this app. All the logic goes here.
  */
@@ -184,12 +186,13 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
             blue100Sphere.created().then(() => {
+                blue100Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
                 blue100Sphere.collider.isTrigger = true;
                 blue100Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -221,12 +224,13 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (red200SphereIndexX), y: 1.6, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
             red200Sphere.created().then(() => {
+                red200Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
                 red200Sphere.collider.isTrigger = true;
                 red200Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -259,12 +263,13 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 7 - (green300SphereIndexX), y: 2.4, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
             green300Sphere.created().then(() => {
+                green300Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
                 green300Sphere.collider.isTrigger = true;
                 green300Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -280,7 +285,7 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-    private createPurple500sphere() {
+    public createPurple500sphere() {
         const purple500SphereCount = 2;
         for (let purple500SphereIndexX = 0; purple500SphereIndexX < purple500SphereCount; purple500SphereIndexX++) {
             const purple500Sphere = Actor.CreatePrimitive(this.context, {
@@ -294,15 +299,17 @@ export default class GalleryGame {
                 actor: {
                     parentId: this.spheresRootActor.id,
                     name: 'Purple Sphere',
+                    subscriptions: ['transform'],
                     transform: {
                         local: {
                             position: { x: 7 - (purple500SphereIndexX), y: 3.2, z: 0 },
-                            scale: { x: 0.3, y: 0.4, z: 0.3 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
                 }
             });
             purple500Sphere.created().then(() => {
+                purple500Sphere.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 9, AnimationEaseCurves.EaseInOutSine);
                 purple500Sphere.collider.isTrigger = true;
                 purple500Sphere.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
                     if (otherActor.parent.name === "throwing_dart") {
@@ -317,8 +324,6 @@ export default class GalleryGame {
         }
     }
 
-    // --------------------------------------------------------------------------------------------
-    // private spheresInflateDeflate
     // --------------------------------------------------------------------------------------------
     private async createDesk() {
         this.desk = Actor.CreateFromPrefab(this.context, {
@@ -418,7 +423,7 @@ export default class GalleryGame {
     }
 
     // --------------------------------------------------------------------------------------------
-    private startGame() {
+    public startGame() {
         const gamePlayButtonBehavior = this.gamePlayButton.setBehavior(ButtonBehavior);
         // When Game Play Button is clicked trigger the game play action.
         gamePlayButtonBehavior.onClick(() => {
@@ -427,17 +432,9 @@ export default class GalleryGame {
                 this.galleryGameRoundTimer.text.contents = `Gallery Game Timer: ${this.timer}`;
                 if (this.timer === 0) {
                     clearInterval(gamePlayButtonInitialed);
-                    // this.gameEndScore = this.score;
                     this.galleryGameLeaderboardArray.push(this.score + " " + this.userJoined.name);
                     this.galleryGameLeaderboardArray.sort();
                     this.galleryGameLeaderboardArray.reverse();
-                    // this.sortedGalleryGameLeaderboard = this.leaderboardArray.sort();
-
-                    // if (this.gameEndScore < this.score) {
-                    //     this.leaderboardArray.push(this.userJoined.name + " " + this.score);
-
-                    // } else {
-                    // }
                     this.scoreTimerLeaderboardRootActor.destroy();
                     if (this.spheresRootActor != null) {
                         if (this.dartsRootActor != null) {
