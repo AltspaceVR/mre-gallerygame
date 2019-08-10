@@ -137,7 +137,7 @@ export default class GalleryGame {
                 name: 'Score',
                 parentId: this.scoreTimerLeaderboardRootActor.id,
                 transform: {
-                    local: { position: { x: -2, y: 0, z: 0 } }
+                    local: { position: { x: 0, y: 5, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Score: ${this.score}`,
@@ -157,7 +157,7 @@ export default class GalleryGame {
                 name: 'Timer',
                 subscriptions: ['transform'],
                 transform: {
-                    local: { position: { x: 2, y: 0, z: 0 } }
+                    local: { position: { x: -4, y: 5, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Timer: ${this.timer}`,
@@ -175,7 +175,7 @@ export default class GalleryGame {
                 parentId: this.scoreTimerLeaderboardRootActor.id,
                 name: 'Leaderboard',
                 transform: {
-                    local: { position: { x: 0, y: 2, z: 0 } }
+                    local: { position: { x: -3, y: 6, z: 0 } }
                 },
                 text: {
                     contents: `Gallery Game Leaderboard: ${this.galleryGameLeaderboardArray}`,
@@ -195,7 +195,7 @@ export default class GalleryGame {
                 name: 'Sphere Pop Board',
                 transform: {
                     local: {
-                        position: { x: -0.9, y: -2, z: 0 },
+                        position: { x: -0.9, y: -2, z: -4.5 },
                         scale: { x: 3, y: 3, z: 3 },
                     }
                 },
@@ -220,8 +220,10 @@ export default class GalleryGame {
                     name: 'Blue Sphere',
                     transform: {
                         local: {
-                            position: { x: -3 - (blue100SphereIndexX), y: .8, z: 0 },
+                            position: { x: -6 - (blue100SphereIndexX), y: 2, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, Math.PI, 0),
+
                         }
                     },
                 }
@@ -259,7 +261,7 @@ export default class GalleryGame {
                     name: 'Blue Sphere',
                     transform: {
                         local: {
-                            position: { x: 2 - (blue100SphereIndexX), y: .8, z: 0 },
+                            position: { x: 1 - (blue100SphereIndexX), y: 2, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
@@ -298,8 +300,10 @@ export default class GalleryGame {
                     name: 'Blue Sphere',
                     transform: {
                         local: {
-                            position: { x: 7 - (blue100SphereIndexX), y: .8, z: 0 },
+                            position: { x: 8 - (blue100SphereIndexX), y: 2, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+
                         }
                     },
                 }
@@ -337,8 +341,10 @@ export default class GalleryGame {
                     name: 'Red Sphere',
                     transform: {
                         local: {
-                            position: { x: -2 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            position: { x: -6 - (red200SphereIndexX), y: 3, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+
                         }
                     },
                 }
@@ -376,7 +382,7 @@ export default class GalleryGame {
                     name: 'Red Sphere',
                     transform: {
                         local: {
-                            position: { x: 2 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            position: { x: 1 - (red200SphereIndexX), y: 3, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
@@ -415,8 +421,10 @@ export default class GalleryGame {
                     name: 'Red Sphere',
                     transform: {
                         local: {
-                            position: { x: 6 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            position: { x: 8 - (red200SphereIndexX), y: 3, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+
                         }
                     },
                 }
@@ -454,8 +462,10 @@ export default class GalleryGame {
                     name: 'Green Sphere',
                     transform: {
                         local: {
-                            position: { x: -2 - (green300SphereIndexX), y: 2.4, z: 0 },
+                            position: { x: -6 - (green300SphereIndexX), y: 4, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+
                         }
                     },
                 }
@@ -476,44 +486,44 @@ export default class GalleryGame {
         }
     }
 
-        // --------------------------------------------------------------------------------------------
-        private createGreen300sphereCenterBoard() {
-            const green300SphereCount = 4;
-            for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
-                const green300SphereCenterBoard = Actor.CreatePrimitive(this.context, {
-                    definition: {
-                        shape: PrimitiveShape.Sphere,
-                        radius: 0.9,
-                        uSegments: 8,
-                        vSegments: 4
+    // --------------------------------------------------------------------------------------------
+    private createGreen300sphereCenterBoard() {
+        const green300SphereCount = 4;
+        for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
+            const green300SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Green Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 1 - (green300SphereIndexX), y: 4, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
                     },
-                    addCollider: true,
-                    actor: {
-                        parentId: this.spheresRootActor.id,
-                        name: 'Green Sphere',
-                        transform: {
-                            local: {
-                                position: { x: 2 - (green300SphereIndexX), y: 2.4, z: 0 },
-                                scale: { x: 0.1, y: 0.1, z: 0.1 },
-                            }
-                        },
+                }
+            });
+            green300SphereCenterBoard.created().then(() => {
+                green300SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                green300SphereCenterBoard.collider.isTrigger = true;
+                green300SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 300;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            green300SphereCenterBoard.destroy();
+                        this.dart.destroy();
                     }
                 });
-                green300SphereCenterBoard.created().then(() => {
-                    green300SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
-                    green300SphereCenterBoard.collider.isTrigger = true;
-                    green300SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
-                        if (otherActor.parent.name === "throwing_dart") {
-                            this.score += 300;
-                            this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
-                                green300SphereCenterBoard.destroy();
-                            this.dart.destroy();
-                        }
-                    });
-                }).catch();
-                this.green300SphereArray.push(green300SphereCenterBoard);
-            }
+            }).catch();
+            this.green300SphereArray.push(green300SphereCenterBoard);
         }
+    }
 
     // --------------------------------------------------------------------------------------------
     private createGreen300sphereRightBoard() {
@@ -532,8 +542,10 @@ export default class GalleryGame {
                     name: 'Green Sphere',
                     transform: {
                         local: {
-                            position: { x: 6 - (green300SphereIndexX), y: 2.4, z: 0 },
+                            position: { x: 8 - (green300SphereIndexX), y: 4, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
+
                         }
                     },
                 }
@@ -572,7 +584,7 @@ export default class GalleryGame {
                     subscriptions: ['transform'],
                     transform: {
                         local: {
-                            position: { x: 7 - (purple500SphereIndexX), y: 3.2, z: 0 },
+                            position: { x: 7 - (purple500SphereIndexX), y: 5, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
@@ -652,7 +664,7 @@ export default class GalleryGame {
                     subscriptions: ['transform'],
                     transform: {
                         local: {
-                            position: { x: 3 - (dartsIndexX), y: -0.5, z: - 3 },
+                            position: { x: 0 - (dartsIndexX), y: 1.5, z: - 3 },
                             scale: { x: .05, y: .05, z: .05 },
                             rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
                         }
@@ -710,7 +722,7 @@ export default class GalleryGame {
                 name: 'Game Play Button',
                 transform: {
                     local: {
-                        position: { x: 2.75, y: -1.2, z: -3.25 },
+                        position: { x: 1, y: 0.5, z: -3.25 },
                         scale: { x: 5, y: 3, z: 3 },
                         rotation: Quaternion.FromEulerAngles(0, -Math.PI, 0),
                     }
