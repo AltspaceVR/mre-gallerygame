@@ -202,7 +202,6 @@ export default class GalleryGame {
             },
         });
     }
-
     // --------------------------------------------------------------------------------------------
     private createBlue100sphereLeftBoard() {
         const blue100SphereCount = 4;
@@ -262,6 +261,45 @@ export default class GalleryGame {
                     transform: {
                         local: {
                             position: { x: 1 - (blue100SphereIndexX), y: 2, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            blue100SphereCenterBoard.created().then(() => {
+                blue100SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                blue100SphereCenterBoard.collider.isTrigger = true;
+                blue100SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 100;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            blue100SphereCenterBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.blue100SphereArray.push(this.blue100SphereCenterBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createBlue100sphereCenterBoard() {
+        const blue100SphereCount = 4;
+        for (let blue100SphereIndexX = 0; blue100SphereIndexX < blue100SphereCount; blue100SphereIndexX++) {
+            const blue100SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Blue Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 2 - (blue100SphereIndexX), y: .8, z: 0 },
                             scale: { x: 0.1, y: 0.1, z: 0.1 },
                         }
                     },
@@ -524,6 +562,162 @@ export default class GalleryGame {
             this.green300SphereArray.push(green300SphereCenterBoard);
         }
     }
+
+    // --------------------------------------------------------------------------------------------
+    private createRed200sphereCenterBoard() {
+        const red200SphereCount = 4;
+        for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
+            const red200SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Red Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 2 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            red200SphereCenterBoard.created().then(() => {
+                red200SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                red200SphereCenterBoard.collider.isTrigger = true;
+                red200SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 200;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            red200SphereCenterBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.red200SphereArray.push(red200SphereCenterBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createRed200sphereRightBoard() {
+        const red200SphereCount = 4;
+        for (let red200SphereIndexX = 0; red200SphereIndexX < red200SphereCount; red200SphereIndexX++) {
+            const createRed200sphereRightBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Red Sphere',
+                    transform: {
+                        local: {
+                            position: { x: 6 - (red200SphereIndexX), y: 1.6, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            createRed200sphereRightBoard.created().then(() => {
+                createRed200sphereRightBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                createRed200sphereRightBoard.collider.isTrigger = true;
+                createRed200sphereRightBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 200;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            createRed200sphereRightBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.red200SphereArray.push(createRed200sphereRightBoard);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    private createGreen300sphereLeftBoard() {
+        const green300SphereCount = 4;
+        for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
+            const green300sphereLeftBoard = Actor.CreatePrimitive(this.context, {
+                definition: {
+                    shape: PrimitiveShape.Sphere,
+                    radius: 0.9,
+                    uSegments: 8,
+                    vSegments: 4
+                },
+                addCollider: true,
+                actor: {
+                    parentId: this.spheresRootActor.id,
+                    name: 'Green Sphere',
+                    transform: {
+                        local: {
+                            position: { x: -2 - (green300SphereIndexX), y: 2.4, z: 0 },
+                            scale: { x: 0.1, y: 0.1, z: 0.1 },
+                        }
+                    },
+                }
+            });
+            green300sphereLeftBoard.created().then(() => {
+                green300sphereLeftBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                green300sphereLeftBoard.collider.isTrigger = true;
+                green300sphereLeftBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                    if (otherActor.parent.name === "throwing_dart") {
+                        this.score += 300;
+                        this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                            green300sphereLeftBoard.destroy();
+                        this.dart.destroy();
+                    }
+                });
+            }).catch();
+            this.green300SphereArray.push(green300sphereLeftBoard);
+        }
+    }
+
+        // --------------------------------------------------------------------------------------------
+        private createGreen300sphereCenterBoard() {
+            const green300SphereCount = 4;
+            for (let green300SphereIndexX = 0; green300SphereIndexX < green300SphereCount; green300SphereIndexX++) {
+                const green300SphereCenterBoard = Actor.CreatePrimitive(this.context, {
+                    definition: {
+                        shape: PrimitiveShape.Sphere,
+                        radius: 0.9,
+                        uSegments: 8,
+                        vSegments: 4
+                    },
+                    addCollider: true,
+                    actor: {
+                        parentId: this.spheresRootActor.id,
+                        name: 'Green Sphere',
+                        transform: {
+                            local: {
+                                position: { x: 2 - (green300SphereIndexX), y: 2.4, z: 0 },
+                                scale: { x: 0.1, y: 0.1, z: 0.1 },
+                            }
+                        },
+                    }
+                });
+                green300SphereCenterBoard.created().then(() => {
+                    green300SphereCenterBoard.animateTo({ transform: { local: { scale: { x: 0.3, y: 0.3, z: 0.3 } } } }, 5, AnimationEaseCurves.EaseInOutSine);
+                    green300SphereCenterBoard.collider.isTrigger = true;
+                    green300SphereCenterBoard.collider.onTrigger('trigger-enter', (otherActor: Actor) => {
+                        if (otherActor.parent.name === "throwing_dart") {
+                            this.score += 300;
+                            this.galleryGameScore.text.contents = `Gallery Game Score: ${this.score}`,
+                                green300SphereCenterBoard.destroy();
+                            this.dart.destroy();
+                        }
+                    });
+                }).catch();
+                this.green300SphereArray.push(green300SphereCenterBoard);
+            }
+        }
 
     // --------------------------------------------------------------------------------------------
     private createGreen300sphereRightBoard() {
